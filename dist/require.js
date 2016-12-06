@@ -97,11 +97,7 @@
   // Allow remote process triggering
   emitEvent.on('process', process);
 
-})(function() {
-  if (typeof window !== 'undefined') return window;
-  if (typeof module !== 'undefined') return module.exports;
-  return this;
-});
+})(typeof exports === 'object' ? exports : this);
 
 
 (function(exports) {
@@ -119,6 +115,13 @@
   exports.baseUri      = '/js/';
   exports.known        = {};
 
+  // Allow registering paths
+  exports.require.register = function( list ) {
+    Object.keys(list).forEach(function (key) {
+      exports.known[key] = list[key];
+    });
+  };
+
   // Make Require.js & Almond.js modules work
   exports.require.amd = true;
 
@@ -131,9 +134,4 @@
     return false;
   });
 
-})(function() {
-  // Core library should be contained inside this
-  if (typeof window !== 'undefined') return window;
-  if (typeof module !== 'undefined') return module.exports;
-  return this;
-});
+})(typeof exports === 'object' ? exports : this);

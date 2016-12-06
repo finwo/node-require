@@ -25,7 +25,10 @@ var rules = [
 ];
 
 // Make sure we're building a clean version
-try { fs.unlinkSync(distFolder); } catch(e) {}
+rules.forEach(function(rule) {
+  try { fs.unlinkSync(rule.target); } catch(e) {}
+});
+try { fs.rmdirSync(distFolder); } catch(e) {}
 try { fs.mkdirSync(distFolder); } catch(e) {}
 
 // Loop through build rules
