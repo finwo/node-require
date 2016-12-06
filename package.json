@@ -1,5 +1,5 @@
 {
-  "name": "node-require-sl",
+  "name": "require-sl",
   "version": "0.0.1",
   "description": "Suckless require",
   "main": "index.js",
