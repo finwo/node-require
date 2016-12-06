@@ -1,6 +1,6 @@
 {
   "name": "require-sl",
-  "main": "index.js",
+  "main": "dist/require.js",
   "homepage": "https://github.com/finwo/node-require-sl",
   "authors": [
     "Robin Bron <robin@finwo.nl>"
@@ -12,6 +12,7 @@
     "node_modules",
     "bower_components",
     "test",
-    "tests"
+    "tests",
+    ".idea"
   ]
 }

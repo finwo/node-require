@@ -5,7 +5,7 @@
   "main": "dist/node.js",
   "scripts": {
     "test": "node test",
-    "postinstall": "node build.js"
+    "build": "node build.js"
   },
   "repository": {
     "type": "git",
