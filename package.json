@@ -1,0 +1,19 @@
+{
+  "name": "node-require-sl",
+  "version": "0.0.1",
+  "description": "Suckless require",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/finwo/node-require-sl.git"
+  },
+  "author": "Robin Bron <robin@finwo.nl>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/finwo/node-require-sl/issues"
+  },
+  "homepage": "https://github.com/finwo/node-require-sl#readme"
+}
