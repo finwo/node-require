@@ -2,9 +2,10 @@
   "name": "require-sl",
   "version": "0.0.1",
   "description": "Suckless require",
-  "main": "index.js",
+  "main": "dist/node.js",
   "scripts": {
-    "test": "npm test"
+    "test": "node test",
+    "postinstall": "node build.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,9 @@
   "bugs": {
     "url": "https://github.com/finwo/node-require-sl/issues"
   },
-  "homepage": "https://github.com/finwo/node-require-sl#readme"
+  "homepage": "https://github.com/finwo/node-require-sl#readme",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "path": "^0.12.7"
+  }
 }
