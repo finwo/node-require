@@ -131,7 +131,7 @@
   exports.require.on('load-module', function(name) {
     var scriptElement = document.createElement('script');
     scriptElement.id  = 'require-sl-' + name;
-    scriptElement.src = known[name] || ( exports.baseUri + name + '.js' ) ;
+    scriptElement.src = known[name] || ( exports.require.baseUri + name + '.js' ) ;
     document.body.appendChild(scriptElement);
     return false;
   });
