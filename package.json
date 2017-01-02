@@ -1,6 +1,6 @@
 {
   "name": "require-sl",
-  "version": "0.0.4",
+  "version": "0.0.7",
   "description": "Suckless require",
   "main": "dist/node.js",
   "scripts": {

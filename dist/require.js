@@ -1,104 +1,50 @@
-(function(exports) {
+(function(exports){
 
-  // Tiny event simulator
-  // ---[ start ]---
-  var evListeners = {};
+  // ---[ event sim ]---
+  var l={},ev=function(n,d){d=d||true;l[n]=l[n]||[];l[n].forEach(function(c){d=d&&c(d);});};
+  ev.on=function(n,c){l[n]=l[n]||[];l[n].push(c);};
 
-  function emitEvent(name, data) {
-    var list = evListeners[name] || [];
-    list.forEach(function (callback) {
-      if (!data) return;
-      data = callback.call(null, data);
-    });
-    return data;
-  }
+  // Keep track of modules
+  var known   = [],
+      modules = {},
+      queue   = [];
 
-  emitEvent.on = function (name, callback) {
-    if (!evListeners[name]) {
-      evListeners[name] = [];
-    }
-    evListeners[name].push(callback);
-  };
-  // ---[  end  ]---
-
-  // Tracking modules
-  var modules  = {}, // Registered modules
-      queue    = [], // Require/Define queue
-      depQueue = [], // Dependency queue
-      loaded   = []; // List to prevent double-loading
-
-  // Processing of the current status
-  function process() {
-
-    // Process queue
-    queue = queue.filter(function (entry) {
-      var runnable = true;
-      entry.deps.forEach(function (dep) {
-        if (Object.keys(modules).indexOf(dep) < 0) {
-          runnable = false;
-          depQueue.push(dep);
+  // Process the current status
+  ev.on('process',function() {
+    queue = queue.filter(function(module){
+      if(module.n&&(modules.indexOf(module.n)>=0))return false;
+      var runnable=true,args=[];
+      module.d.forEach(function(dep) {
+        if(modules[dep]) {
+          args.push(modules[dep]);
+        } else {
+          runnable=false;
+          if(known.indexOf(dep)<0){ev('load-module',dep);known.push(dep);}
         }
       });
-      if (runnable) {
-        var args   = entry.deps.map(function (name) {
-          return modules[name];
-        });
-        var result = entry.callback.apply(null, args);
-        if (entry.name) {
-          modules[entry.name] = result;
-        }
+      if(runnable){
+        var result = module.c.apply(null,args);
+        if(module.n)modules[module.n]=result;
       }
       return !runnable;
     });
+  });
 
-    // Process dependency queue
-    var name;
-    while (depQueue.length) {
-      name = depQueue.shift();
-      if (loaded.indexOf(name) >= 0) {
-        continue;
-      }
-      loaded.push(name);
-      emitEvent('load-module', name);
-    }
-  }
-
-  // The actual structure
+  // The actual require module
   exports.__require = {
-
-    // Expose the event emitter
-    on  : emitEvent.on,
-    emit: emitEvent,
-
-    // Requiring modules
-    require: function (dependencies, callback) {
-      queue.push({
-        callback: callback,
-        deps    : dependencies
-      });
-      process();
+    on  : ev.on,
+    emit: ev,
+    require: function(deps,callback) {
+      queue.push({d:deps,c:callback});
+      ev('process');
     },
-
-    // Registering modules
-    define: function (name, dependencies, callback) {
-      if (typeof dependencies === 'function') {
-        callback     = dependencies;
-        dependencies = [];
-      }
-      queue.push({
-        callback: callback,
-        deps    : dependencies,
-        name    : name
-      });
-      process();
+    define: function(name,deps,callback) {
+      if(typeof deps==='function'){callback=deps;deps=[];}
+      queue.unshift({d:deps,c:callback,n:name});
+      ev('process');
     }
   };
-
-  // Allow remote process triggering
-  emitEvent.on('process', process);
-
 })(typeof exports === 'object' ? exports : this);
-
 
 (function(exports) {
 
@@ -107,11 +53,15 @@
     throw new Error("Corrupt require-sl build");
   }
 
+  // Fetch event handler
+  var ev = exports.__require.emit;
+
   // Browser structure
   exports.define          = exports.__require.define;
+  exports.define.amd      = true;
   exports.require         = exports.__require.require;
-  exports.require.on      = exports.__require.on;
-  exports.require.emit    = exports.__require.emit;
+  exports.require.on      = ev.on;
+  exports.require.emit    = ev;
   exports.require.amd     = true;
   exports.require.baseUri = '/js/';
 
@@ -125,10 +75,8 @@
     });
   };
 
-  // Make Require.js & Almond.js modules work
-
   // Register loader for this platform
-  exports.require.on('load-module', function(name) {
+  ev.on('load-module', function(name) {
     var scriptElement = document.createElement('script');
     scriptElement.id  = 'require-sl-' + name;
     scriptElement.src = known[name] || ( exports.require.baseUri + name + '.js' ) ;
