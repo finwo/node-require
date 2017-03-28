@@ -1,48 +1,64 @@
 (function(exports){
-
-  // ---[ event sim ]---
-  var l={},ev=function(n,d){d=d||true;l[n]=l[n]||[];l[n].forEach(function(c){d=d&&c(d);});};
-  ev.on=function(n,c){l[n]=l[n]||[];l[n].push(c);};
-
-  // Keep track of modules
-  var known   = [],
+  
+  // ---[ events ]---
+  var l={},ev=function(n,d){d=d||!0;(l[n]||[]).map(function(c){d=d&&c(d)})};
+  ev.on=function(n,c){(l[n]=l[n]||[]).push(c)};
+  
+  var queue   = [],
       modules = {},
-      queue   = [];
-
-  // Process the current status
-  ev.on('process',function() {
-    queue = queue.filter(function(module){
-      if(module.n&&(modules.indexOf(module.n)>=0))return false;
-      var runnable=true,args=[];
-      module.d.forEach(function(dep) {
-        if(modules[dep]) {
-          args.push(modules[dep]);
-        } else {
-          runnable=false;
-          if(known.indexOf(dep)<0){ev('load-module',dep);known.push(dep);}
-        }
+      timeout = setTimeout;
+  
+  // ---[ helpers ]---
+  function ObjectValues( obj ) {
+    return Object
+      .keys(obj)
+      .map(function(key) {
+        return obj[key];
       });
-      if(runnable){
-        var result = module.c.apply(null,args);
-        if(module.n)modules[module.n]=result;
-      }
-      return !runnable;
-    });
-  });
-
-  // The actual require module
-  exports.__require = {
-    on  : ev.on,
-    emit: ev,
-    require: function(deps,callback) {
-      queue.push({d:deps,c:callback});
-      ev('process');
-    },
-    define: function(name,deps,callback) {
-      if(typeof deps==='function'){callback=deps;deps=[];}
-      queue.unshift({d:deps,c:callback,n:name});
-      ev('process');
+  }
+  
+  // ---[ core ]---
+  ev.on('process', function() {
+    
+    // Fetch next entry
+    var entry = queue.shift();
+    if(!entry) return;
+    
+    // Don't redefine a module
+    if ( entry.s && modules[entry.s] ) {
+      queue.length && timeout(ev.bind(null,'process'), 20);
+      return;
     }
+    
+    // Fetch dependencies
+    var ready = true,
+        args  = entry.o.map(function(dependency) {
+          if ( !ready              ) return;
+          if ( modules[dependency] ) return modules[dependency];
+          ready = false;
+          ev('load-module', dependency);
+        });
+    
+    // Run/register the module if ready
+    if ( ready ) {
+      entry.s ? modules[entry.s] = entry.f.apply(null, args) : entry.f.apply(null, args);
+    }
+    
+    // Continue processing if there's a queue
+    queue.length && timeout(ev.bind(null,'process'), 20);
+  });
+  
+  // ---[ API ]---
+  exports.emit    = ev;
+  exports.on      = ev.on;
+  exports.require = exports.define = function() {
+    var entry = { s: null, o: [], f: function(){} };
+    ObjectValues(arguments).forEach(function(argument) {
+      entry[(typeof argument).substr(0,1)] = argument;
+    });
+    queue.push(entry);
+    ev('process');
   };
+  
 })(typeof exports === 'object' ? exports : this);
 
